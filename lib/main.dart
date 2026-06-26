@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'shared/theme/app_theme.dart';
 
 void main() {
   runApp(const SpotiflyApp());
@@ -12,12 +13,15 @@ class SpotiflyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Spotifly',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(),
+      theme: AppTheme.darkTheme,
       home: const Scaffold(
         body: Center(
           child: Text(
             'Spotifly',
-            style: TextStyle(fontSize: 32),
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),
