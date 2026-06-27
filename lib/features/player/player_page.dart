@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../shared/theme/app_theme.dart';
 
 class PlayerPage extends StatefulWidget {
@@ -18,17 +19,16 @@ class _PlayerPageState extends State<PlayerPage> {
   Duration _position = Duration.zero;
   bool _completed = false;
   bool _seeking = false;
+  String _title = 'Aucun fichier sélectionné';
+  String? _filePath;
 
   @override
   void initState() {
     super.initState();
-    _initPlayer();
+    _initListeners();
   }
 
-  Future<void> _initPlayer() async {
-    await _player.setVolume(_volume);
-    await _player.setSource(AssetSource('audio/07_Sans_couleur.mp3'));
-
+  void _initListeners() {
     _player.onDurationChanged.listen((d) {
       setState(() => _duration = d);
     });
@@ -52,10 +52,37 @@ class _PlayerPageState extends State<PlayerPage> {
     });
   }
 
+  Future<void> _pickFile() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['mp3', 'wav', 'flac', 'm4a'],
+    );
+
+    if (result != null && result.files.single.path != null) {
+      final path = result.files.single.path!;
+      final name = result.files.single.name;
+
+      setState(() {
+        _filePath = path;
+        _title = name.replaceAll(RegExp(r'\.[^.]+$'), '');
+        _completed = false;
+        _progress = 0.0;
+        _position = Duration.zero;
+        _duration = Duration.zero;
+      });
+
+      await _player.play(DeviceFileSource(path));
+    }
+  }
+
   Future<void> _togglePlay() async {
+    if (_filePath == null) {
+      await _pickFile();
+      return;
+    }
     if (_completed) {
       _completed = false;
-      await _player.play(AssetSource('audio/07_Sans_couleur.mp3'));
+      await _player.play(DeviceFileSource(_filePath!));
     } else if (_isPlaying) {
       await _player.pause();
     } else {
@@ -78,7 +105,7 @@ class _PlayerPageState extends State<PlayerPage> {
       _position = position;
       _seeking = false;
     });
-    if (_isPlaying || !_completed) await _player.resume();
+    if (!_completed) await _player.resume();
   }
 
   String _formatDuration(Duration d) {
@@ -106,35 +133,45 @@ class _PlayerPageState extends State<PlayerPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Center(
-                child: Container(
-                  width: albumSize,
-                  height: albumSize,
-                  decoration: BoxDecoration(
-                    color: AppColors.card,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.music_note,
-                    color: AppColors.primary,
-                    size: albumSize * 0.3,
+              GestureDetector(
+                onTap: _pickFile,
+                child: Center(
+                  child: Container(
+                    width: albumSize,
+                    height: albumSize,
+                    decoration: BoxDecoration(
+                      color: AppColors.card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: _filePath == null
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add, color: AppColors.primary, size: albumSize * 0.2),
+                              const SizedBox(height: 8),
+                              const Text('Choisir un fichier',
+                                  style: TextStyle(color: AppColors.textSecondary)),
+                            ],
+                          )
+                        : Icon(Icons.music_note, color: AppColors.primary, size: albumSize * 0.3),
                   ),
                 ),
               ),
 
               const SizedBox(height: 24),
 
-              const Text(
-                'Sans couleur',
-                style: TextStyle(
+              Text(
+                _title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
                   color: AppColors.textPrimary,
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 4),
               const Text(
-                'Artiste inconnu',
+                'Fichier local',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
               ),
 
@@ -229,6 +266,17 @@ class _PlayerPageState extends State<PlayerPage> {
                   ),
                   const Icon(Icons.volume_up, color: AppColors.textSecondary),
                 ],
+              ),
+
+              const SizedBox(height: 16),
+
+              TextButton.icon(
+                onPressed: _pickFile,
+                icon: const Icon(Icons.folder_open, color: AppColors.primary),
+                label: const Text(
+                  'Changer de fichier',
+                  style: TextStyle(color: AppColors.primary),
+                ),
               ),
             ],
           ),
