@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../features/home/home_page.dart';
 import '../features/library/library_page.dart';
 import '../features/player/player_page.dart';
@@ -8,11 +9,15 @@ class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
 
   @override
-  State<MainScaffold> createState() => _MainScaffoldState();
+  State<MainScaffold> createState() => MainScaffoldState();
 }
 
-class _MainScaffoldState extends State<MainScaffold> {
+class MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
+
+  void navigateTo(int index) {
+    setState(() => _currentIndex = index);
+  }
 
   final List<Widget> _pages = const [
     HomePage(),

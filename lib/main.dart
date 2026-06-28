@@ -1,9 +1,16 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'core/audio_provider.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/main_scaffold.dart';
 
 void main() {
-  runApp(const SpotiflyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AudioProvider(),
+      child: const SpotiflyApp(),
+    ),
+  );
 }
 
 class SpotiflyApp extends StatelessWidget {
