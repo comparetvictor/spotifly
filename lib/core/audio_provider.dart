@@ -34,7 +34,6 @@ class AudioProvider extends ChangeNotifier {
   double get volume => _volume;
   Duration get duration => _duration;
   Duration get position => _position;
-  bool get completed => _completed;
 
   AudioProvider() {
     _initListeners();
@@ -59,7 +58,10 @@ class AudioProvider extends ChangeNotifier {
 
     _player.onPlayerStateChanged.listen((state) {
       _isPlaying = state == PlayerState.playing;
-      if (state == PlayerState.completed) _completed = true;
+      if (state == PlayerState.completed) {
+        _completed = true;
+        playNext();
+      }
       notifyListeners();
     });
   }
@@ -81,6 +83,24 @@ class AudioProvider extends ChangeNotifier {
     _duration = Duration.zero;
     notifyListeners();
     await _player.play(DeviceFileSource(track.path));
+  }
+
+  Future<void> playNext() async {
+    if (_tracks.isEmpty || _currentTrack == null) return;
+    final index = _tracks.indexOf(_currentTrack!);
+    if (index < _tracks.length - 1) {
+      await playTrack(_tracks[index + 1]);
+    }
+  }
+
+  Future<void> playPrevious() async {
+    if (_tracks.isEmpty || _currentTrack == null) return;
+    final index = _tracks.indexOf(_currentTrack!);
+    if (index > 0) {
+      await playTrack(_tracks[index - 1]);
+    } else {
+      await restart();
+    }
   }
 
   Future<void> togglePlay() async {
@@ -129,6 +149,7 @@ class AudioProvider extends ChangeNotifier {
   Future<void> restart() async {
     _completed = false;
     await _player.seek(Duration.zero);
+    if (!_isPlaying) await _player.resume();
   }
 
   String formatDuration(Duration d) {

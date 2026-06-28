@@ -104,7 +104,7 @@ class PlayerPage extends StatelessWidget {
                     icon: const Icon(Icons.skip_previous,
                         color: AppColors.textPrimary, size: 36),
                     onPressed: provider.currentTrack != null
-                        ? () => provider.restart()
+                        ? () => provider.playPrevious()
                         : null,
                   ),
                   GestureDetector(
@@ -130,7 +130,9 @@ class PlayerPage extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.skip_next,
                         color: AppColors.textPrimary, size: 36),
-                    onPressed: () {},
+                    onPressed: provider.currentTrack != null
+                        ? () => provider.playNext()
+                        : null,
                   ),
                   IconButton(
                     icon: const Icon(Icons.repeat, color: AppColors.textSecondary),
