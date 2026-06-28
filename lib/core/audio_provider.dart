@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Track {
   final String path;
@@ -38,6 +39,7 @@ class AudioProvider extends ChangeNotifier {
   AudioProvider() {
     _initListeners();
     _player.setVolume(_volume);
+    _loadTracks();
   }
 
   void _initListeners() {
@@ -66,13 +68,42 @@ class AudioProvider extends ChangeNotifier {
     });
   }
 
+  Future<void> _loadTracks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final paths = prefs.getStringList('track_paths') ?? [];
+    final titles = prefs.getStringList('track_titles') ?? [];
+
+    _tracks = List.generate(
+      paths.length,
+      (i) => Track(path: paths[i], title: titles[i]),
+    );
+    notifyListeners();
+  }
+
+  Future<void> _saveTracks() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('track_paths', _tracks.map((t) => t.path).toList());
+    await prefs.setStringList('track_titles', _tracks.map((t) => t.title).toList());
+  }
+
   void addTrack(String path, String name) {
     final title = name.replaceAll(RegExp(r'\.[^.]+$'), '');
     final track = Track(path: path, title: title);
     if (!_tracks.contains(track)) {
       _tracks.add(track);
+      _saveTracks();
       notifyListeners();
     }
+  }
+
+  void removeTrack(Track track) {
+    _tracks.remove(track);
+    if (_currentTrack == track) {
+      _currentTrack = null;
+      _player.stop();
+    }
+    _saveTracks();
+    notifyListeners();
   }
 
   Future<void> playTrack(Track track) async {
