@@ -4,6 +4,8 @@ import '../features/home/home_page.dart';
 import '../features/library/library_page.dart';
 import '../features/player/player_page.dart';
 import 'theme/app_theme.dart';
+import 'widgets/mini_player.dart';
+import '../core/audio_provider.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -27,30 +29,41 @@ class MainScaffoldState extends State<MainScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AudioProvider>();
+
     return Scaffold(
       body: _pages[_currentIndex],
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primary.withOpacity(0.2),
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() => _currentIndex = index);
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined, color: AppColors.textSecondary),
-            selectedIcon: Icon(Icons.home, color: AppColors.primary),
-            label: 'Accueil',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.play_circle_outline, color: AppColors.textSecondary),
-            selectedIcon: Icon(Icons.play_circle, color: AppColors.primary),
-            label: 'Lecteur',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.library_music_outlined, color: AppColors.textSecondary),
-            selectedIcon: Icon(Icons.library_music, color: AppColors.primary),
-            label: 'Bibliothèque',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (provider.currentTrack != null && _currentIndex != 1)
+            MiniPlayer(
+              onTap: () => navigateTo(1),
+            ),
+          NavigationBar(
+            backgroundColor: AppColors.surface,
+            indicatorColor: AppColors.primary.withOpacity(0.2),
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (index) {
+              setState(() => _currentIndex = index);
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined, color: AppColors.textSecondary),
+                selectedIcon: Icon(Icons.home, color: AppColors.primary),
+                label: 'Accueil',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.play_circle_outline, color: AppColors.textSecondary),
+                selectedIcon: Icon(Icons.play_circle, color: AppColors.primary),
+                label: 'Lecteur',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.library_music_outlined, color: AppColors.textSecondary),
+                selectedIcon: Icon(Icons.library_music, color: AppColors.primary),
+                label: 'Bibliothèque',
+              ),
+            ],
           ),
         ],
       ),
